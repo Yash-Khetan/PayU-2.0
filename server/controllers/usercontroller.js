@@ -3,6 +3,16 @@ import bcrypt from "bcrypt"
 import Transactions from "../models/transactionSchema.js"
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
+import transaction from "../queue/producer.js"
+import { Worker } from 'bullmq';
+import IORedis from 'ioredis';
+
+const connection = new IORedis({ maxRetriesPerRequest: null });
+
+const time = () => 
+    new Promise((res,rej) => setTimeout(() => res(), 5*1000))
+
+
 dotenv.config(); 
 
 export const userlogin  = async (req,res) => {
@@ -51,16 +61,11 @@ export const transact = async (req,res) => {
     try {
         const senderemail = req.user.email; 
         const { receiveremail, transactamount} = req.body;
-        
-       
-
 
         const sender = await User.findOne({email: senderemail});
        
-
         const receiver = await User.findOne({email: receiveremail});
        
-        
         if (!sender || !receiver) {
             return res.status(404).json({message: "Sender or receiver not found"});
         }
@@ -82,11 +87,18 @@ export const transact = async (req,res) => {
             return res.status(400).json({message: "Insufficient balance"});
             
         }
+
+        // put in the queue for the transaction 
+        transaction(senderemail, receiveremail,transactamount,sender.balance, receiver.balance);
         
-        sender.balance -= Number(transactamount);
-        receiver.balance += Number(transactamount);
-        
-        await sender.save();
+        // use the worker overhere; 
+        const worker = new Worker( 
+            "payments", 
+            async(job) => {
+                sender.balance -= Number(transactamount); 
+                receiver.balance += Number(transactamount); 
+                await time(); 
+                await sender.save();
         await receiver.save();
 
         await Transactions.create({
@@ -99,6 +111,13 @@ export const transact = async (req,res) => {
         })
         
         res.status(200).json({message: "Transaction successful", sender, receiver});
+                console.log(job.data); 
+            }, {connection},
+        )
+
+
+
+        
     } catch (error) {
         res.status(500).json({error: error.message});
     }
@@ -113,3 +132,19 @@ export const transactionhistory = async (req,res) => {
     }
     res.status(200).json({message: "Transaction history", transactions}); 
 }
+
+
+export const allusers = async (req,res) => {
+    const currentemail = req.user.email; 
+    const currentname  = await User.find({email: currentemail}); 
+    const users = await User.find({name: {$ne: currentname}});
+    if (!users){
+        res.status(201).json({message: "No users found to pay"}); 
+    }
+    res.status(200).json({message: "Users found", users }); 
+
+
+}
+
+
+

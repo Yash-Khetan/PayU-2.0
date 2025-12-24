@@ -18,6 +18,9 @@ const userSchema = new mongoose.Schema({
         type:  Number, 
         default: 10000,
     },
+    lockedbalance: {
+        type:Number, 
+    }
 },{timestamps: true})
 
 
