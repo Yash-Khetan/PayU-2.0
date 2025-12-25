@@ -6,7 +6,7 @@ const router = express.Router();
 router.post("/login", userlogin);
 router.post("/register", useregister);
 router.post("/transact", verifytoken, transact);
-router.get("/history",verifytoken,transactionhistory); 
+router.post("/history",verifytoken,transactionhistory); 
 router.get("/all", verifytoken, allusers); 
 
 export default router; 
