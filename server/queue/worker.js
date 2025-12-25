@@ -3,6 +3,8 @@ import IORedis from "ioredis";
 import mongoose from "mongoose";
 import Transactions from "../models/transactionSchema.js";
 import User from "../models/userSchema.js";
+import dotenv from "dotenv"
+dotenv.config() ;
 
 // Redis connection
 const connection = new IORedis({
@@ -13,7 +15,7 @@ const connection = new IORedis({
 
 // MongoDB connection (Atlas)
 mongoose
-  .connect("mongodb+srv://paymentsInterface:yash1234@payu1.mqz5eov.mongodb.net/payments")
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected (worker)"))
   .catch((err) => console.error("❌ MongoDB error (worker):", err));
 

@@ -1,6 +1,9 @@
 import express from "express"
 import mongoose from "mongoose"
 import userRoutes from "./routes/userRoutes.js"
+import dotenv  from "dotenv"
+
+dotenv.config();
 
 const app = express()
 const port = 5000;
@@ -9,7 +12,7 @@ const port = 5000;
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect("mongodb+srv://paymentsInterface:yash1234@payu1.mqz5eov.mongodb.net/payments?retryWrites=true&w=majority&appName=PayU1")
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB connected"))
     .catch((err) => console.log("MongoDB connection error:", err));
 
