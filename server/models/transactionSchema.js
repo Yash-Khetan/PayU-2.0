@@ -1,6 +1,7 @@
 import mongoose from "mongoose"
 
 const transactions = mongoose.Schema({
+   
     senderid: {
          type: String
     },

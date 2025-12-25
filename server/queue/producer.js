@@ -8,12 +8,10 @@ const paymentsqueue = new Queue('payments', {
 }); 
 
 
-export default async function transaction (senderid, receiverid, amount) {
+export default async function transaction (temptransaction) {
     try{
         const job = await paymentsqueue.add("process-payment",{
-        senderid,
-        receiverid,
-        amount
+       transactionid: temptransaction.toString() 
     })
     return job.id
 }catch(error) {

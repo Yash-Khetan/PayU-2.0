@@ -4,17 +4,10 @@ import Transactions from "../models/transactionSchema.js"
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 import transaction from "../queue/producer.js"
-import { Worker } from 'bullmq';
-import IORedis from 'ioredis';
-
-const connection = new IORedis({ maxRetriesPerRequest: null });
-
-const time = () => 
-    new Promise((res,rej) => setTimeout(() => res(), 5*1000))
-
 
 dotenv.config(); 
 
+// const session  = mongoose.startSession() ;
 export const userlogin  = async (req,res) => {
     try {
         const {email, password} = req.body;
@@ -30,8 +23,9 @@ export const userlogin  = async (req,res) => {
         }
         const token = jwt.sign({
             email,
-            id: user._id
-        }, process.env.JWT_SECRET)
+            id: user._id,
+            
+        }, process.env.JWT_SECRET,  { expiresIn: "1h" })
         res.status(200).json({message: "Login successful", token});
     } catch (error) {
         res.status(500).json({error: error.message});
@@ -74,47 +68,22 @@ export const transact = async (req,res) => {
             return res.status(400).json({message:"cannot transfer to self"}); 
         }
         
+        // balance validation
         if (sender.balance < transactamount) {
-
-             await Transactions.create({
-            senderid: senderemail, 
-            receiverid: receiveremail, 
-            amount: transactamount, 
-            status: "failed", 
-            date: new Date(), 
-            message: "insufficient balance"
-        })
-            return res.status(400).json({message: "Insufficient balance"});
-            
+            return res.status(400).json({ message: "Insufficient balance" });
         }
 
         // put in the queue for the transaction 
-        transaction(senderemail, receiveremail,transactamount,sender.balance, receiver.balance);
-        
-        // use the worker overhere; 
-        const worker = new Worker( 
-            "payments", 
-            async(job) => {
-                sender.balance -= Number(transactamount); 
-                receiver.balance += Number(transactamount); 
-                await time(); 
-                await sender.save();
-        await receiver.save();
-
-        await Transactions.create({
-            senderid: senderemail, 
-            receiverid: receiveremail, 
+       const temptransaction =  await Transactions.create({
+            senderid: senderemail ,
+            receiverid : receiveremail, 
+            status: "pending", 
             amount: transactamount, 
-            status: "approved", 
-            date: new Date(), 
-            message: "transaction successful!"
         })
-        
-        res.status(200).json({message: "Transaction successful", sender, receiver});
-                console.log(job.data); 
-            }, {connection},
-        )
 
+        transaction(temptransaction._id);
+    
+        res.status(202).json({message: `Transaction queued with id: ${temptransaction._id} and status: ${temptransaction.status}`})
 
 
         
@@ -125,9 +94,9 @@ export const transact = async (req,res) => {
 
 
 export const transactionhistory = async (req,res) => { 
-    const {email} = req.body; 
+    const email = req.user.email; 
     const transactions = await Transactions.find({senderid:email}); 
-    if (!transactions){
+    if (transactions.length == 0){
         res.status(400).json({message: "no transactions"}); 
     }
     res.status(200).json({message: "Transaction history", transactions}); 
@@ -136,8 +105,9 @@ export const transactionhistory = async (req,res) => {
 
 export const allusers = async (req,res) => {
     const currentemail = req.user.email; 
-    const currentname  = await User.find({email: currentemail}); 
-    const users = await User.find({name: {$ne: currentname}});
+    const users = await User.find({ email: { $ne: currentemail } });
+
+
     if (!users){
         res.status(201).json({message: "No users found to pay"}); 
     }
