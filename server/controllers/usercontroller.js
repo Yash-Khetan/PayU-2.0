@@ -81,7 +81,7 @@ export const transact = async (req,res) => {
             amount: transactamount, 
         })
 
-        transaction(temptransaction._id);
+        const result = await transaction(temptransaction._id);
     
         res.status(202).json({message: `Transaction queued with id: ${temptransaction._id} and status: ${temptransaction.status}`})
 
