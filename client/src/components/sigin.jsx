@@ -1,11 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
+import {useNavigate} from "react-router-dom";
 
 export const Signin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const formsubmission = async (e) => {
         e.preventDefault();
@@ -23,6 +25,7 @@ export const Signin = () => {
                 // Store token in localStorage
                 localStorage.setItem("token", response.data.token);
                 // Redirect to dashboard or home page
+                navigate("/dashboard");
             }
         } catch (err) {
             setError(err.response?.data?.message || "Login failed. Please try again.");
@@ -70,7 +73,7 @@ export const Signin = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="you@example.com"
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 placeholder-gray-400"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 placeholder-gray-400 text-gray-900"
                             />
                         </div>
 
@@ -86,7 +89,7 @@ export const Signin = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 placeholder-gray-400"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 placeholder-gray-400 text-gray-900"
                             />
                         </div>
                     </div>

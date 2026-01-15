@@ -29,7 +29,7 @@ export const Dashboard =  () => {
         const fetchprofile = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const response = await axios.get("http://localhost:5000/api/users/myprofile", {
+                const response = await axios.get("http://localhost:5000/api/users/me", {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -62,55 +62,101 @@ export const Dashboard =  () => {
         fetchtransactions();
     }, []);
 
-      return (
-    <div className="h-screen w-screen bg-gray-100 p-6">
-      <div className="grid grid-cols-12 gap-6 h-full">
+    // handling form submission for sending money 
+    const handleformsubmit = async (e) => {
+        e.preventDefault(); 
+        const receiveremail = e.target[0].value; 
+        const amount = e.target[1].value;
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.post("http://localhost:5000/api/users/transact", {
+                receiveremail,
+                amount
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            console.log("Transaction successful:", response.data);
+        } catch (error) {
+            console.error("Error sending money:", error);
+        }
+    };
 
-        {/* LEFT PANEL */}
-        <div className="col-span-3 bg-white rounded-xl p-4 shadow">
-          <h3 className="font-semibold text-lg">Balance</h3>
-          <p className="text-2xl font-bold mt-2">₹ {profile.balance}</p>
+    return (
+  <div className="h-screen w-screen bg-gray-100 p-6">
+    <div className="grid grid-cols-12 gap-6 h-full">
 
-          <h4 className="font-semibold mt-6">Transactions</h4>
-          <div className="mt-2 space-y-2">
-            {transactions.map((tx) => (
-              <div key={tx._id} className="text-sm flex justify-between">
-                <span>{tx.receiverid}</span>
-                <span>₹{tx.amount}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* LEFT PANEL */}
+      <div className="col-span-3 bg-white rounded-xl p-5 shadow-sm">
+        <h3 className="font-semibold text-lg text-gray-900">Balance</h3>
+        <p className="text-2xl font-bold mt-2 text-indigo-600">
+          ₹ {profile.balance ?? 0}
+        </p>
 
-        {/* CENTER PANEL */}
-        <div className="col-span-6 bg-white rounded-xl p-4 shadow overflow-y-auto">
-          <h3 className="font-semibold text-lg mb-4">Users</h3>
-          {users.map((u) => (
-            <div key={u._id} className="border-b py-2">
-              <p className="font-medium">{u.name}</p>
-              <p className="text-sm text-gray-500">{u.email}</p>
+        <h4 className="font-semibold mt-6 text-gray-900">Transactions</h4>
+
+        <div className="mt-3 space-y-2">
+          {transactions.length === 0 && (
+            <p className="text-sm text-gray-500">No transactions yet</p>
+          )}
+
+          {transactions.map((tx) => (
+            <div
+              key={tx._id}
+              className="text-sm flex justify-between text-gray-700"
+            >
+              <span className="truncate">{tx.receiverid}</span>
+              <span className="font-medium">₹{tx.amount}</span>
             </div>
           ))}
         </div>
-
-        {/* RIGHT PANEL */}
-        <div className="col-span-3 bg-white rounded-xl p-4 shadow">
-          <h3 className="font-semibold text-lg mb-4">Send Money</h3>
-
-          <input
-            placeholder="Receiver Email"
-            className="w-full border p-2 rounded mb-3"
-          />
-          <input
-            placeholder="Amount"
-            className="w-full border p-2 rounded mb-3"
-          />
-          <button className="w-full bg-indigo-600 text-white p-2 rounded">
-            Pay
-          </button>
-        </div>
-
       </div>
+
+      {/* CENTER PANEL */}
+      <div className="col-span-6 bg-white rounded-xl p-5 shadow-sm overflow-y-auto">
+        <h3 className="font-semibold text-lg mb-4 text-gray-900">Users</h3>
+
+        {users.length === 0 && (
+          <p className="text-sm text-gray-500">No users found</p>
+        )}
+
+        {users.map((u) => (
+          <div
+            key={u._id}
+            className="border-b py-3 last:border-none"
+          >
+            <p className="font-medium text-gray-900">{u.name}</p>
+            <p className="text-sm text-gray-600">{u.email}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div className="col-span-3 bg-white rounded-xl p-5 shadow-sm">
+        <h3 className="font-semibold text-lg mb-4 text-gray-900">
+          Send Money
+        </h3>
+
+        <form onSubmit={handleformsubmit}>
+            <input
+          placeholder="Receiver Email"
+          className="w-full border border-gray-300 p-2 rounded mb-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+
+        <input
+          placeholder="Amount"
+          className="w-full border border-gray-300 p-2 rounded mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+
+        <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded font-medium">
+          Pay
+        </button>
+        </form>
+      </div>
+
     </div>
-  );
+  </div>
+);
+
 };
