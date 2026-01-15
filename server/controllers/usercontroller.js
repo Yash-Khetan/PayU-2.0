@@ -40,7 +40,7 @@ export const useregister = async (req,res) =>{
         if (isuser) {
             return res.status(400).json({message: "User already exists"});
         }
-        
+
         
         const user = await User.create({
             name,
@@ -85,7 +85,6 @@ export const transact = async (req,res) => {
             status: "pending", 
             amount: transactamount, 
         })
-
         // const result = await transaction(temptransaction._id);
     
         // res.status(202).json({message: `Transaction queued with id: ${temptransaction._id} and status: ${temptransaction.status}`})
@@ -97,7 +96,7 @@ export const transact = async (req,res) => {
     }
 }
 
-
+// fetching transaction history 
 export const transactionhistory = async (req,res) => { 
     const email = req.user.email; 
     const transactions = await Transactions.find({senderid:email}); 
@@ -107,20 +106,34 @@ export const transactionhistory = async (req,res) => {
     res.status(200).json({message: "Transaction history", transactions}); 
 }
 
-
+// fetching all users except me 
 export const allusers = async (req,res) => {
     try {
-        const users = await User.find({}); 
-        if (users.length == 0) {
-            res.status(400).json({message: "no users"});
+        const user = req.user.email;
+        const allusers = await User.find({email : {$ne: user}}).select("-password -__v"); 
+        if (allusers.length == 0) {
+            return res.status(400).json({message: "no users"});
         }
-        res.status(200).json({message: "All users", users});
-
+        return res.status(200).json({message: "All users", allusers});
        
     } catch (error) {
         res.status(500).json({error: error.message});
     }
 }
 
+// fetching my profile 
+export const myprofile = async (req,res) => {
+    try  {
+        const email = req.user.email; 
+        const info = await User.findOne({email}); 
+        if (!info){
+            return res.status(404).json({message: "User not found"});
+        }
+        res.status(200).json({message: "User profile", info});
+    }
+    catch (error) {
+        res.status(500).json({error: error.message});
+    }
+}
 
 

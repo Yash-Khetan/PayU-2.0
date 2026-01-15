@@ -3,6 +3,7 @@ import react from 'react'
 import './App.css'
 import { Signin } from './components/sigin.jsx'
 import { landing } from './landing.jsx'
+import { Dashboard } from './components/dashboard.jsx'
 import { Signup } from './components/createaccount.jsx'
 
 function App() {
@@ -12,7 +13,8 @@ function App() {
   return (
     <>
       {/* <Signin/>  */}
-      <Signup/>
+      {/* <Signup/> */}
+      <Dashboard/>
     </>
   )
 }
