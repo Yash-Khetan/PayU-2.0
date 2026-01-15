@@ -22,7 +22,7 @@ export const userlogin  = async (req,res) => {
             return res.status(401).json({message: "Invalid password"});
         }
         const token = jwt.sign({
-            email,
+            email,  
             id: user._id,
             
         }, process.env.JWT_SECRET,  { expiresIn: "1h" })
@@ -104,16 +104,17 @@ export const transactionhistory = async (req,res) => {
 
 
 export const allusers = async (req,res) => {
-    const currentemail = req.user.email; 
-    const users = await User.find({ email: { $ne: currentemail } });
+    try {
+        const users = await User.find({}); 
+        if (users.length == 0) {
+            res.status(400).json({message: "no users"});
+        }
+        res.status(200).json({message: "All users", users});
 
-
-    if (!users){
-        res.status(201).json({message: "No users found to pay"}); 
+       
+    } catch (error) {
+        res.status(500).json({error: error.message});
     }
-    res.status(200).json({message: "Users found", users }); 
-
-
 }
 
 

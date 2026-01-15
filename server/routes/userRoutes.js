@@ -7,6 +7,6 @@ router.post("/login", userlogin);
 router.post("/register", useregister);
 router.post("/transact", verifytoken, transact);
 router.post("/history",verifytoken,transactionhistory); 
-router.get("/all", verifytoken, allusers); 
+router.get("/all", allusers); 
 
 export default router; 
