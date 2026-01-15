@@ -3,7 +3,7 @@ import bcrypt from "bcrypt"
 import Transactions from "../models/transactionSchema.js"
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
-import transaction from "../queue/producer.js"
+// import transaction from "../queue/producer.js"
 
 dotenv.config(); 
 
@@ -36,6 +36,11 @@ export const useregister = async (req,res) =>{
     try {
         const {name, email, password} = req.body;
         const hashpassword = await bcrypt.hash(password, 10);
+        const isuser = await User.findOne({email});
+        if (isuser) {
+            return res.status(400).json({message: "User already exists"});
+        }
+        
         
         const user = await User.create({
             name,
@@ -43,7 +48,7 @@ export const useregister = async (req,res) =>{
             password: hashpassword,
         });
         
-        res.status(201).json({message: "User registered successfully", user});
+        res.status(200).json({message: "User registered successfully", user});
     } catch (error) {
         res.status(500).json({error: error.message});
     }
@@ -81,9 +86,9 @@ export const transact = async (req,res) => {
             amount: transactamount, 
         })
 
-        const result = await transaction(temptransaction._id);
+        // const result = await transaction(temptransaction._id);
     
-        res.status(202).json({message: `Transaction queued with id: ${temptransaction._id} and status: ${temptransaction.status}`})
+        // res.status(202).json({message: `Transaction queued with id: ${temptransaction._id} and status: ${temptransaction.status}`})
 
 
         
