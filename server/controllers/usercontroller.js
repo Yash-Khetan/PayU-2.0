@@ -1,9 +1,10 @@
 import User from "../models/userSchema.js"
 import bcrypt from "bcrypt"
-import Transactions from "../models/transactionSchema.js"
+import Transfer from "../models/transfer.js"
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
-// import transaction from "../queue/producer.js"
+import transactionqueue from "../producer.js"
+import Ledger from "../models/Ledger.js"
 
 dotenv.config(); 
 
@@ -79,15 +80,34 @@ export const transact = async (req,res) => {
         }
 
         // put in the queue for the transaction 
-       const temptransaction =  await Transactions.create({
-            senderid: senderemail ,
-            receiverid : receiveremail, 
-            status: "pending", 
-            amount: transactamount, 
-        })
-        // const result = await transaction(temptransaction._id);
-    
-        // res.status(202).json({message: `Transaction queued with id: ${temptransaction._id} and status: ${temptransaction.status}`})
+        const payment = await Transfer.create({
+            senderEmail: sender.email,
+            receiverEmail: receiver.email,
+            amount: transactamount,
+            status: "PENDING"
+        });
+
+        const ledgerentry = await Ledger.create([
+            {
+                transferId: payment._id,
+                userEmail: sender.email,
+                type: "DEBIT",
+                amount: transactamount,
+                status: "PENDING"
+            },
+            {
+                transferId: payment._id,
+                userEmail: receiver.email,
+                type: "CREDIT",
+                amount: transactamount,
+                status: "PENDING"
+            }
+        ]);
+
+        // queueing the transactions 
+        await transactionqueue(payment._id);
+        return res.status(202).json({message: "Transaction is being processed"});
+        // return res.status(202).json({message: `Transactions queued with ids: ${sendertransaction._id}, ${receivertransaction._id} and statuses: ${sendertransaction.status}, ${receivertransaction.status}`})
 
 
         
@@ -97,43 +117,64 @@ export const transact = async (req,res) => {
 }
 
 // fetching transaction history 
-export const transactionhistory = async (req,res) => { 
-    const email = req.user.email; 
-    const transactions = await Transactions.find({senderid:email}); 
-    if (transactions.length == 0){
-        res.status(400).json({message: "no transactions"}); 
+export const transactionhistory = async (req, res) => {
+  try {
+    const email = req.user.email;
+    const transactions = await Transactions.find({ senderid: email });
+
+    // Always return array, even if empty
+    if (transactions.length === 0) {
+      return res.status(200).json({
+        message: "No transactions found",
+        history: [],
+      });
     }
-    res.status(200).json({message: "Transaction history", transactions}); 
+    res.status(200).json({
+      message: "Transaction history fetched successfully",
+      history: transactions,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Fetch all users except the logged-in user
+export const allusers = async (req, res) => {
+  try {
+    const email = req.user.email;
+    const allusers = await User.find({ email: { $ne: email } }).select(
+      "-password -__v"
+    );
+
+    // Always return array
+    res.status(200).json({
+      message: "All users",
+      allusers: allusers || [],
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Fetch profile of the logged-in user
+export const myprofile = async (req, res) => {
+  try {
+    const email = req.user.email;
+    const info = await User.findOne({ email }).select("-password -__v");
+
+    if (!info) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User profile",
+      info,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }
 
-// fetching all users except me 
-export const allusers = async (req,res) => {
-    try {
-        const user = req.user.email;
-        const allusers = await User.find({email : {$ne: user}}).select("-password -__v"); 
-        if (allusers.length == 0) {
-            return res.status(400).json({message: "no users"});
-        }
-        return res.status(200).json({message: "All users", allusers});
-       
-    } catch (error) {
-        res.status(500).json({error: error.message});
-    }
-}
 
-// fetching my profile 
-export const myprofile = async (req,res) => {
-    try  {
-        const email = req.user.email; 
-        const info = await User.findOne({email}); 
-        if (!info){
-            return res.status(404).json({message: "User not found"});
-        }
-        res.status(200).json({message: "User profile", info});
-    }
-    catch (error) {
-        res.status(500).json({error: error.message});
-    }
-}
 
 

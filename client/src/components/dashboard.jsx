@@ -47,7 +47,7 @@ export const Dashboard =  () => {
     const fetchtransactions = async () => {
         try { 
             const token = localStorage.getItem("token") ;
-            const response  = await axios.post("http://localhost:5000/api/users/history", {}, {
+            const response  = await axios.get("http://localhost:5000/api/users/history", {
                 headers: {
                     Authorization: `Bearer ${token}` 
 
@@ -97,7 +97,7 @@ export const Dashboard =  () => {
         <h4 className="font-semibold mt-6 text-gray-900">Transactions</h4>
 
         <div className="mt-3 space-y-2">
-          {transactions.length === 0 && (
+          {transactions.length == 0 && (
             <p className="text-sm text-gray-500">No transactions yet</p>
           )}
 
