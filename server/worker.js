@@ -81,7 +81,7 @@ const worker = new Worker(
       }
 
       // Simulated delay (optional)
-      await sleep(7000);
+      await sleep(10000);
 
       // Apply balances
       sender.balance -= debit.amount;

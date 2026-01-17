@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 export const Dashboard = () => {
+  
+  // fetching all users
+
   const [users, setUsers] = useState([]);
   useEffect(() => {
     const fetchusers = async () => {
@@ -20,9 +23,9 @@ export const Dashboard = () => {
     fetchusers();
   }, []);
 
+  // fetching profile
   const [profile, setProfile] = useState({});
-  useEffect(() => {
-    const fetchprofile = async () => {
+  const fetchprofile = async () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get("http://localhost:5000/api/users/me", {
@@ -35,9 +38,12 @@ export const Dashboard = () => {
         console.error("Error fetching profile:", error);
       }
     };
+  useEffect(() => {
+    
     fetchprofile();
   }, []);
 
+  // fetching transactions
   const [transactions, setTransactions] = useState([]);
   const fetchtransactions = async () => {
     try {
@@ -56,8 +62,11 @@ export const Dashboard = () => {
     fetchtransactions();
   }, []);
 
+  // handling the click on pay button
+
   const [receiveremail, setReceiveremail] = useState("");
   const [amount, setAmount] = useState("");
+
   const handleformsubmit = async (e) => {
     e.preventDefault();
     try {
@@ -74,11 +83,74 @@ export const Dashboard = () => {
           }
         }
       );
+    
+      startpolling(response.data.transferId);
+
+      setReceiveremail("");
+      setAmount("");
       console.log("Transaction successful:", response.data);
+    
     } catch (error) {
-      console.error("Error sending money:", error);
+      const msg =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      "Transaction failed";
+
+    alert(msg);
+    setpolling(false);
+    setCurrentTransferStatus(null);
     }
   };
+
+  const [polling, setpolling] = useState(false);
+  const [currentTransferStatus, setCurrentTransferStatus] = useState(null);
+const pollingRef = useRef(null);
+
+  const startpolling = (transferId) => {
+  if (!transferId) return;
+
+  setpolling(true);
+  setCurrentTransferStatus("PENDING");
+
+  const token = localStorage.getItem("token");
+
+  pollingRef.current = setInterval(async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/users/transfers/${transferId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      const status = res.data.transfer.status;
+      setCurrentTransferStatus(status);
+
+      if (status === "SUCCESS" || status === "FAILED") {
+        stopPolling();
+        fetchtransactions();
+        fetchprofile();
+      }
+
+    } catch (err) {
+      console.error("Polling failed:", err);
+      stopPolling(); 
+      setCurrentTransferStatus("FAILED");
+    }
+  }, 2000);
+};
+
+const stopPolling = () => {
+  if (pollingRef.current) {
+    clearInterval(pollingRef.current);
+    pollingRef.current = null;
+  }
+  setpolling(false);
+};
+
+
+
+
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-8">
@@ -121,20 +193,24 @@ export const Dashboard = () => {
                 )}
 
                 {transactions.map((tx) => (
-                  <div
-                    key={tx._id}
-                    className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors duration-200"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 truncate flex-1">
-                        {tx.receiverid}
-                      </span>
-                      <span className="text-sm font-semibold text-red-600 ml-2">
-                        -₹{tx.amount}
-                      </span>
+                    <div key={tx._id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 truncate">
+                          {tx.receiverEmail}
+                        </span>
+                        <span className={`text-sm font-semibold ${
+                          tx.status === "SUCCESS" ? "text-green-600" :
+                          tx.status === "FAILED" ? "text-red-600" :
+                          "text-yellow-600"
+                        }`}>
+                          ₹{tx.amount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {tx.status}
+                      </p>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
@@ -215,10 +291,37 @@ export const Dashboard = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white p-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
-                Send Payment
+              <button
+                disabled={polling}
+                className={`w-full p-3.5 rounded-xl font-semibold shadow-lg transition-all duration-200
+                  ${polling
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:-translate-y-0.5"}
+                  text-white`}
+              >
+                {polling ? "Processing..." : "Send Payment"}
               </button>
+
             </form>
+            {currentTransferStatus && (
+              <div className="mt-4 text-center">
+                {currentTransferStatus === "PENDING" && (
+                  <p className="text-sm text-yellow-600 font-medium">
+                    ⏳ Transaction is processing…
+                  </p>
+                )}
+                {currentTransferStatus === "SUCCESS" && (
+                  <p className="text-sm text-green-600 font-medium">
+                    ✅ Payment successful
+                  </p>
+                )}
+                {currentTransferStatus === "FAILED" && (
+                  <p className="text-sm text-red-600 font-medium">
+                    ❌ Payment failed
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

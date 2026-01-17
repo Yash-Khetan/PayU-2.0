@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 import transactionqueue from "../producer.js"
 import Ledger from "../models/Ledger.js"
+import mongoose from "mongoose"
 
 dotenv.config(); 
 
@@ -101,7 +102,7 @@ export const transact = async (req,res) => {
 
         // queueing the transactions 
         await transactionqueue(payment._id);
-        return res.status(202).json({message: "Transaction is being processed"});
+        return res.status(202).json({message: "Transaction is being processed", transferId: payment._id});
         // return res.status(202).json({message: `Transactions queued with ids: ${sendertransaction._id}, ${receivertransaction._id} and statuses: ${sendertransaction.status}, ${receivertransaction.status}`})
 
 
@@ -164,6 +165,31 @@ export const myprofile = async (req, res) => {
     res.status(200).json({
       message: "User profile",
       info,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+
+// fetch the transfers
+export const transfers  = async (req,res) => {
+    try {
+    const { id } = req.params;
+
+    // Safety check (optional but good)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid transfer ID" });
+    }
+
+    const transfer = await Transfer.findById(id);
+
+    if (!transfer) {
+      return res.status(404).json({ error: "Transfer not found" });
+    }
+
+    return res.status(200).json({
+      transfer
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
