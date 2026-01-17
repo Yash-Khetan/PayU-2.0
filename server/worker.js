@@ -65,15 +65,23 @@ const worker = new Worker(
       const receiver = await User.findOne({ email: credit.userEmail }).session(session);
 
       if (!sender || !receiver) {
-        throw new Error("Sender or receiver missing");
+        throw new Error("Sender or receiver not found");
       }
 
       if (sender.balance < debit.amount) {
-        throw new Error("Insufficient balance");
+        debit.status = "FAILED"; 
+        credit.status = "FAILED";
+        transfer.status = "FAILED";
+        await debit.save({ session });
+        await credit.save({ session });
+        await transfer.save({ session });
+        console.log("insufficient balance for transfer:", transferId); 
+        await session.commitTransaction();
+        return;
       }
 
       // Simulated delay (optional)
-      await sleep(3000);
+      await sleep(7000);
 
       // Apply balances
       sender.balance -= debit.amount;
@@ -93,18 +101,10 @@ const worker = new Worker(
       await transfer.save({ session });
 
       await session.commitTransaction();
-      console.log("✅ Transfer completed:", transferId);
+      console.log(" Transfer completed:", transferId);
     } catch (err) {
+      console.error(" Worker error:", err.message);
       await session.abortTransaction();
-      console.error("❌ Worker error:", err.message);
-
-      await Transfer.findByIdAndUpdate(transferId, { status: "FAILED" });
-      await Ledger.updateMany(
-        { transferId },
-        { status: "FAILED" }
-      );
-
-      throw err;
     } finally {
       await session.endSession();
     }

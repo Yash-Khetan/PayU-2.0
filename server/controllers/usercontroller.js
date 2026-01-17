@@ -73,11 +73,6 @@ export const transact = async (req,res) => {
         if (sender.email === receiver.email) {
             return res.status(400).json({message:"cannot transfer to self"}); 
         }
-        
-        // balance validation
-        if (sender.balance < transactamount) {
-            return res.status(400).json({ message: "Insufficient balance" });
-        }
 
         // put in the queue for the transaction 
         const payment = await Transfer.create({
