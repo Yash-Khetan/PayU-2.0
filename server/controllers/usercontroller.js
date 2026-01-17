@@ -115,7 +115,7 @@ export const transact = async (req,res) => {
 export const transactionhistory = async (req, res) => {
   try {
     const email = req.user.email;
-    const transactions = await Transactions.find({ senderid: email });
+    const transactions = await Ledger.find({ userEmail: email });
 
     // Always return array, even if empty
     if (transactions.length === 0) {

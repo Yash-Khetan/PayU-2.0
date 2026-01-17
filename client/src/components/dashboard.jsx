@@ -63,15 +63,15 @@ export const Dashboard =  () => {
     }, []);
 
     // handling form submission for sending money 
+    const [receiveremail, setReceiveremail] = useState("");
+    const [amount, setAmount] = useState("");
     const handleformsubmit = async (e) => {
         e.preventDefault(); 
-        const receiveremail = e.target[0].value; 
-        const amount = e.target[1].value;
         try {
             const token = localStorage.getItem("token");
             const response = await axios.post("http://localhost:5000/api/users/transact", {
                 receiveremail,
-                amount
+                transactamount: amount
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -142,11 +142,16 @@ export const Dashboard =  () => {
             <input
           placeholder="Receiver Email"
           className="w-full border border-gray-300 p-2 rounded mb-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          value={receiveremail}
+          onChange={(e) => setReceiveremail(e.target.value)}
         />
 
         <input
           placeholder="Amount"
           className="w-full border border-gray-300 p-2 rounded mb-4 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          type="number"
         />
 
         <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded font-medium">
