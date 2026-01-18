@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const Dashboard = () => {
   
@@ -10,7 +12,7 @@ export const Dashboard = () => {
     const fetchusers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/users/all", {
+        const response = await axios.get(`${process.env.backend_url}/api/users/all`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -28,7 +30,7 @@ export const Dashboard = () => {
   const fetchprofile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/users/me", {
+        const response = await axios.get(`${process.env.backend_url}/api/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -48,7 +50,7 @@ export const Dashboard = () => {
   const fetchtransactions = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/users/history", {
+      const response = await axios.get(`${process.env.backend_url}/api/users/history`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -72,7 +74,7 @@ export const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5000/api/users/transact",
+        `${process.env.backend_url}/api/users/transact`,
         {
           receiveremail,
           transactamount: amount
@@ -117,7 +119,7 @@ const pollingRef = useRef(null);
   pollingRef.current = setInterval(async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/users/transfers/${transferId}`,
+        `${process.env.backend_url}/api/users/transfers/${transferId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

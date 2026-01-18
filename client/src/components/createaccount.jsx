@@ -1,25 +1,27 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const Signup = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-//   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const formsubmission = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/register",
+        `${process.env.backend_url}/api/users/register`,
         { name, email, password }
       );
 
       if (response.status === 200) {
-        // navigate("/signin"); 
+        navigate("/signin"); 
       }
     } catch (err) {
       console.error("Registration failed", err);

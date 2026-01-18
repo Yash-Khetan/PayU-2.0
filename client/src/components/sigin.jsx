@@ -1,6 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
+import dotenv from "dotenv";
+dotenv.config();
+
 
 export const Signin = () => {
     const [email, setEmail] = useState("");
@@ -15,7 +18,7 @@ export const Signin = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post("http://localhost:5000/api/users/login", {
+            const response = await axios.post(`${process.env.backend_url}/api/users/login`, {
                 email,
                 password
             });
