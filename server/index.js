@@ -16,9 +16,8 @@ app.use(express.json());
  
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.log("MongoDB connection error:", err));
+await mongoose.connect(process.env.MONGO_URI);
+console.log("MongoDB connected");
 
 app.get("/", (req, res) => {
     res.send("Payment API is running");
@@ -29,3 +28,5 @@ app.use("/api/users", userRoutes);
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on http://localhost:${process.env.PORT}`);
 })
+
+import "./queue/worker.js"

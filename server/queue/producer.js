@@ -1,10 +1,8 @@
 import { Queue } from "bullmq";
+import { redisConnection } from "./connection.js";
 
 const paymentsQueue = new Queue("payments", {
-  connection: {
-    host: "127.0.0.1",
-    port: 6379,
-  },
+  connection: redisConnection,
 });
 
 export default async function transactionQueue(transferId) {

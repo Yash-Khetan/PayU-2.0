@@ -1,20 +1,16 @@
 import { Worker } from "bullmq";
-import IORedis from "ioredis";
+import { redisConnection } from "./connection.js";
 import mongoose from "mongoose";
-import Transfer from "./models/transfer.js";
-import Ledger from "./models/Ledger.js";
-import User from "./models/userSchema.js";
+import Transfer from "../models/transfer.js";
+import Ledger from "../models/Ledger.js";
+import User from "../models/userSchema.js";
+
 import dotenv from "dotenv";
 
 dotenv.config();
 
 console.log("Worker process starting...");
 
-// Redis connection
-const connection = new IORedis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null ,
-  enableReadyCheck: false,
-}); 
 
 // MongoDB connection
 mongoose
@@ -28,7 +24,7 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const worker = new Worker(
   "payments",
   async (job) => {
-    console.log("📥 Worker received job:", job.data);
+    console.log(" Worker received job:", job.data);
 
     const { transferId } = job.data;
     if (!transferId) {
@@ -71,11 +67,13 @@ const worker = new Worker(
         debit.status = "FAILED"; 
         credit.status = "FAILED";
         transfer.status = "FAILED";
-        await debit.save({ session });
-        await credit.save({ session });
-        await transfer.save({ session });
-        console.log("insufficient balance for transfer:", transferId); 
+        await Promise.all([
+          debit.save({ session }),
+          credit.save({ session }),
+          transfer.save({ session }),
+        ]);
         await session.commitTransaction();
+        console.log("insufficient balance for transfer:", transferId); 
         return;
       }
 
@@ -86,29 +84,36 @@ const worker = new Worker(
       sender.balance -= debit.amount;
       receiver.balance += credit.amount;
 
-      await sender.save({ session });
-      await receiver.save({ session });
+       
 
-      // Ledger success
+      // Success saved and updated statuses
       debit.status = "SUCCESS";
       credit.status = "SUCCESS";
-      await debit.save({ session });
-      await credit.save({ session });
-
-      // Transfer success
       transfer.status = "SUCCESS";
-      await transfer.save({ session });
+      
+      await Promise.all ([
+        sender.save({ session }),
+        receiver.save({ session }),
+        debit.save({ session }),
+        credit.save({ session }),
+        transfer.save({ session })
+      ]);
+
 
       await session.commitTransaction();
       console.log(" Transfer completed:", transferId);
     } catch (err) {
+
       console.error(" Worker error:", err.message);
       await session.abortTransaction();
+
     } finally {
+
       await session.endSession();
+
     }
   },
-  { connection }
+  { connection: redisConnection }
 );
 
 // Lifecycle logs

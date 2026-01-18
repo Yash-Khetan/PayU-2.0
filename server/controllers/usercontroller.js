@@ -3,7 +3,7 @@ import bcrypt from "bcrypt"
 import Transfer from "../models/transfer.js"
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
-import transactionqueue from "../producer.js"
+import transactionqueue from "../queue/producer.js"
 import Ledger from "../models/Ledger.js"
 import mongoose from "mongoose"
 
