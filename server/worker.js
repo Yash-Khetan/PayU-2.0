@@ -11,11 +11,10 @@ dotenv.config();
 console.log("🚀 Worker process starting...");
 
 // Redis connection
-const connection = new IORedis({
-  host: "127.0.0.1",
-  port: 6379,
-  maxRetriesPerRequest: null,
-});
+const connection = new IORedis(process.env.REDIS_URL, {
+  maxRetriesPerRequest: null ,
+  enableReadyCheck: false,
+}); 
 
 // MongoDB connection
 mongoose
