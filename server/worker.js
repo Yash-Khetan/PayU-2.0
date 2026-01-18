@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-console.log("🚀 Worker process starting...");
+console.log("Worker process starting...");
 
 // Redis connection
 const connection = new IORedis(process.env.REDIS_URL, {
@@ -19,8 +19,8 @@ const connection = new IORedis(process.env.REDIS_URL, {
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected (worker)"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .then(() => console.log(" MongoDB connected (worker)"))
+  .catch((err) => console.error(" MongoDB error:", err));
 
 // Utility
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -47,7 +47,7 @@ const worker = new Worker(
 
       // Idempotency guard
       if (transfer.status !== "PENDING") {
-        console.log("⚠️ Transfer already processed:", transfer.status);
+        console.log(" Transfer already processed:", transfer.status);
         await session.abortTransaction();
         return;
       }
@@ -113,9 +113,9 @@ const worker = new Worker(
 
 // Lifecycle logs
 worker.on("completed", (job) => {
-  console.log(`🎉 Job ${job.id} completed`);
+  console.log(` Job ${job.id} completed`);
 });
 
 worker.on("failed", (job, err) => {
-  console.error(`🔥 Job ${job?.id} failed:`, err.message);
+  console.error(` Job ${job?.id} failed:`, err.message);
 });
