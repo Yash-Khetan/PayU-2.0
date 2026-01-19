@@ -1,10 +1,10 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import dotenv from "dotenv";
-dotenv.config();
+
 
 export const Signup = () => {
+  const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +16,7 @@ export const Signup = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.backend_url}/api/users/register`,
+        `${API}/api/users/register`,
         { name, email, password }
       );
 

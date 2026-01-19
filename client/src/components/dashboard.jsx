@@ -6,13 +6,14 @@ dotenv.config();
 export const Dashboard = () => {
   
   // fetching all users
+  const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   const [users, setUsers] = useState([]);
   useEffect(() => {
     const fetchusers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${process.env.backend_url}/api/users/all`, {
+        const response = await axios.get(`${API}/api/users/all`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -30,7 +31,7 @@ export const Dashboard = () => {
   const fetchprofile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${process.env.backend_url}/api/users/me`, {
+        const response = await axios.get(`${API}/api/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -50,7 +51,7 @@ export const Dashboard = () => {
   const fetchtransactions = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${process.env.backend_url}/api/users/history`, {
+      const response = await axios.get(`${API}/api/users/history`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -74,7 +75,7 @@ export const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${process.env.backend_url}/api/users/transact`,
+        `${API}/api/users/transact`,
         {
           receiveremail,
           transactamount: amount
@@ -119,7 +120,7 @@ const pollingRef = useRef(null);
   pollingRef.current = setInterval(async () => {
     try {
       const res = await axios.get(
-        `${process.env.backend_url}/api/users/transfers/${transferId}`,
+        `${API}/api/users/transfers/${transferId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

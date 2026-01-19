@@ -1,11 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
-import dotenv from "dotenv";
-dotenv.config();
+
 
 
 export const Signin = () => {
+    const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
