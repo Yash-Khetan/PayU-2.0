@@ -5,7 +5,7 @@ import axios from "axios";
 export const Dashboard = () => {
   
   // fetching all users
-  const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const API = import.meta.env.VITE_BACKEND_URL ;
 
   const [users, setUsers] = useState([]);
   useEffect(() => {

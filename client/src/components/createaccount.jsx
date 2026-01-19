@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 
 export const Signup = () => {
-  const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const API = import.meta.env.VITE_BACKEND_URL ;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

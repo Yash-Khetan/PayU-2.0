@@ -5,7 +5,7 @@ import {useNavigate} from "react-router-dom";
 
 
 export const Signin = () => {
-    const API = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    const API = import.meta.env.VITE_BACKEND_URL ;
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -18,7 +18,7 @@ export const Signin = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${process.env.backend_url}/api/users/login`, {
+            const response = await axios.post(`${API}/api/users/login`, {
                 email,
                 password
             });
