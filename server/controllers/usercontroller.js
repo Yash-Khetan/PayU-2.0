@@ -75,6 +75,14 @@ export const transact = async (req,res) => {
             return res.status(400).json({message:"cannot transfer to self"}); 
         }
 
+        const existing = await Transfer.findOne({
+          senderEmail: req.user.email, 
+          status: "PENDING"
+        });
+
+        if (existing) {
+          return res.status(400).json({ message: "You have a pending transaction. Please wait until it is processed." , transferId: existing._id });
+        }
         // put in the queue for the transaction 
         const payment = await Transfer.create({
             senderEmail: sender.email,

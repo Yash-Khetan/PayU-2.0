@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 import axios from "axios";
 
 
@@ -68,10 +68,15 @@ export const Dashboard = () => {
 
   const [receiveremail, setReceiveremail] = useState("");
   const [amount, setAmount] = useState("");
-
+  const [polling, setpolling] = useState(false);
+  const [currentTransferStatus, setCurrentTransferStatus] = useState(null);
+const pollingRef = useRef(null);
   const handleformsubmit = async (e) => {
     e.preventDefault();
+    if (polling)  return;
     try {
+       setpolling(true);
+       
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${API}/api/users/transact`,
@@ -85,7 +90,8 @@ export const Dashboard = () => {
           }
         }
       );
-    
+      
+      
       startpolling(response.data.transferId);
 
       setReceiveremail("");
@@ -104,9 +110,7 @@ export const Dashboard = () => {
     }
   };
 
-  const [polling, setpolling] = useState(false);
-  const [currentTransferStatus, setCurrentTransferStatus] = useState(null);
-const pollingRef = useRef(null);
+  
 
   const startpolling = (transferId) => {
   if (!transferId) return;
