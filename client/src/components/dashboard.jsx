@@ -269,7 +269,7 @@ const stopPolling = () => {
             <form onSubmit={handleformsubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Receiver Email
+                  Send to (Email) 
                 </label>
                 <input
                   placeholder="example@email.com"
