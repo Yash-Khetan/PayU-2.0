@@ -68,6 +68,7 @@ export const Dashboard = () => {
 
   const [receiveremail, setReceiveremail] = useState("");
   const [amount, setAmount] = useState("");
+  const [pin, setPin] = useState(""); // PIN state
   const [polling, setpolling] = useState(false);
   const [currentTransferStatus, setCurrentTransferStatus] = useState(null);
   const pollingRef = useRef(null);
@@ -82,7 +83,8 @@ export const Dashboard = () => {
         `${API}/api/users/transact`,
         {
           receiveremail,
-          transactamount: amount
+          transactamount: amount,
+          pin
         },
         {
           headers: {
@@ -96,6 +98,7 @@ export const Dashboard = () => {
 
       setReceiveremail("");
       setAmount("");
+      setPin(""); // Clear PIN
       console.log("Transaction successful:", response.data);
 
     } catch (error) {
@@ -302,10 +305,28 @@ export const Dashboard = () => {
                 </div>
               </div>
 
+              {/* PIN Input for Transaction */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Security PIN
+                </label>
+                <input
+                  placeholder="0000"
+                  type="password"
+                  maxLength="4"
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 tracking-widest text-center font-bold"
+                  value={pin}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d{0,4}$/.test(val)) setPin(val);
+                  }}
+                />
+              </div>
+
               <button
-                disabled={polling}
+                disabled={polling || !pin || pin.length !== 4}
                 className={`w-full p-3.5 rounded-xl font-semibold shadow-lg transition-all duration-200
-                  ${polling
+                  ${polling || !pin || pin.length !== 4
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:-translate-y-0.5"}
                   text-white`}

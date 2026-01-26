@@ -64,7 +64,7 @@ const worker = new Worker(
       }
 
       if (sender.balance < debit.amount) {
-        debit.status = "FAILED"; 
+        debit.status = "FAILED";
         credit.status = "FAILED";
         transfer.status = "FAILED";
         await Promise.all([
@@ -73,25 +73,25 @@ const worker = new Worker(
           transfer.save({ session }),
         ]);
         await session.commitTransaction();
-        console.log("insufficient balance for transfer:", transferId); 
+        console.log("insufficient balance for transfer:", transferId);
         return;
       }
 
       // Simulated delay (optional)
-      await sleep(10000);
+      await sleep(2000);
 
       // Apply balances
       sender.balance -= debit.amount;
       receiver.balance += credit.amount;
 
-       
+
 
       // Success saved and updated statuses
       debit.status = "SUCCESS";
       credit.status = "SUCCESS";
       transfer.status = "SUCCESS";
-      
-      await Promise.all ([
+
+      await Promise.all([
         sender.save({ session }),
         receiver.save({ session }),
         debit.save({ session }),
@@ -103,14 +103,22 @@ const worker = new Worker(
       await session.commitTransaction();
       console.log(" Transfer completed:", transferId);
     } catch (err) {
-
       console.error(" Worker error:", err.message);
       await session.abortTransaction();
 
+      // CRITICAL FIX: If the worker fails, we must explicitly mark the transaction as FAILED 
+      // otherwise the user is blocked forever by the "pending transaction" check in the controller.
+      // We do this OUTSIDE the aborted session.
+      try {
+        await Transfer.findByIdAndUpdate(transferId, { status: "FAILED" });
+        await Ledger.updateMany({ transferId }, { status: "FAILED" });
+        console.log(" Marked transaction as FAILED during error recovery:", transferId);
+      } catch (updateErr) {
+        console.error(" Failed to mark transaction as FAILED:", updateErr);
+      }
+
     } finally {
-
       await session.endSession();
-
     }
   },
   { connection: redisConnection }
