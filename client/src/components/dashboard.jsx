@@ -3,9 +3,9 @@ import axios from "axios";
 
 
 export const Dashboard = () => {
-  
+
   // fetching all users
-  const API = import.meta.env.VITE_BACKEND_URL ;
+  const API = import.meta.env.VITE_BACKEND_URL;
 
   const [users, setUsers] = useState([]);
   useEffect(() => {
@@ -28,20 +28,20 @@ export const Dashboard = () => {
   // fetching profile
   const [profile, setProfile] = useState({});
   const fetchprofile = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${API}/api/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setProfile(response.data.info);
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API}/api/users/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setProfile(response.data.info);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
   useEffect(() => {
-    
+
     fetchprofile();
   }, []);
 
@@ -70,13 +70,13 @@ export const Dashboard = () => {
   const [amount, setAmount] = useState("");
   const [polling, setpolling] = useState(false);
   const [currentTransferStatus, setCurrentTransferStatus] = useState(null);
-const pollingRef = useRef(null);
+  const pollingRef = useRef(null);
   const handleformsubmit = async (e) => {
     e.preventDefault();
-    if (polling)  return;
+    if (polling) return;
     try {
-       setpolling(true);
-       
+      setpolling(true);
+
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${API}/api/users/transact`,
@@ -90,69 +90,69 @@ const pollingRef = useRef(null);
           }
         }
       );
-      
-      
+
+
       startpolling(response.data.transferId);
 
       setReceiveremail("");
       setAmount("");
       console.log("Transaction successful:", response.data);
-    
+
     } catch (error) {
       const msg =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      "Transaction failed";
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Transaction failed";
 
-    alert(msg);
-    setpolling(false);
-    setCurrentTransferStatus(null);
+      alert(msg);
+      setpolling(false);
+      setCurrentTransferStatus(null);
     }
   };
 
-  
+
 
   const startpolling = (transferId) => {
-  if (!transferId) return;
+    if (!transferId) return;
 
-  setpolling(true);
-  setCurrentTransferStatus("PENDING");
+    setpolling(true);
+    setCurrentTransferStatus("PENDING");
 
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  pollingRef.current = setInterval(async () => {
-    try {
-      const res = await axios.get(
-        `${API}/api/users/transfers/${transferId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await axios.get(
+          `${API}/api/users/transfers/${transferId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        const status = res.data.transfer.status;
+        setCurrentTransferStatus(status);
+
+        if (status === "SUCCESS" || status === "FAILED") {
+          stopPolling();
+          fetchtransactions();
+          fetchprofile();
         }
-      );
 
-      const status = res.data.transfer.status;
-      setCurrentTransferStatus(status);
-
-      if (status === "SUCCESS" || status === "FAILED") {
+      } catch (err) {
+        console.error("Polling failed:", err);
         stopPolling();
-        fetchtransactions();
-        fetchprofile();
+        setCurrentTransferStatus("FAILED");
       }
+    }, 2000);
+  };
 
-    } catch (err) {
-      console.error("Polling failed:", err);
-      stopPolling(); 
-      setCurrentTransferStatus("FAILED");
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
     }
-  }, 2000);
-};
-
-const stopPolling = () => {
-  if (pollingRef.current) {
-    clearInterval(pollingRef.current);
-    pollingRef.current = null;
-  }
-  setpolling(false);
-};
+    setpolling(false);
+  };
 
 
 
@@ -199,24 +199,29 @@ const stopPolling = () => {
                 )}
 
                 {transactions.map((tx) => (
-                    <div key={tx._id} className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 truncate">
-                          {tx.receiverEmail}
-                        </span>
-                        <span className={`text-sm font-semibold ${
-                          tx.status === "SUCCESS" ? "text-green-600" :
-                          tx.status === "FAILED" ? "text-red-600" :
-                          "text-yellow-600"
+                  <div key={tx.id} className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium text-gray-700 truncate max-w-[180px]" title={tx.counterparty}>
+                        {tx.counterparty}
+                      </span>
+                      <span className={`text-sm font-bold ${tx.amount > 0 ? "text-green-600" : "text-gray-900"
                         }`}>
-                          ₹{tx.amount}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {tx.status}
-                      </p>
+                        {tx.amount > 0 ? "+" : ""}₹{tx.amount}
+                      </span>
                     </div>
-                  ))}
+                    <div className="flex justify-between items-center">
+                      <span className={`text-xs font-medium ${tx.status === "SUCCESS" ? "text-green-500" :
+                          tx.status === "FAILED" ? "text-red-500" :
+                            "text-yellow-600"
+                        }`}>
+                        {tx.status}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(tx.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -269,7 +274,7 @@ const stopPolling = () => {
             <form onSubmit={handleformsubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Send to (Email) 
+                  Send to (Email)
                 </label>
                 <input
                   placeholder="example@email.com"

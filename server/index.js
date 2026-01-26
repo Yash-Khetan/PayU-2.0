@@ -1,7 +1,7 @@
 import express from "express"
 import mongoose from "mongoose"
 import userRoutes from "./routes/userRoutes.js"
-import dotenv  from "dotenv"
+import dotenv from "dotenv"
 import cors from "cors"
 
 dotenv.config();
@@ -11,14 +11,15 @@ const app = express()
 
 app.use(cors({
     origin: [
-        process.env.Client_URL
+        process.env.Client_URL,
+        "http://localhost:5173"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
 // Middleware
 app.use(express.json());
- 
+
 
 // MongoDB Connection
 await mongoose.connect(process.env.MONGO_URI);
