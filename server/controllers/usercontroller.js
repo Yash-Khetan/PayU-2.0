@@ -6,13 +6,14 @@ import dotenv from "dotenv"
 import transactionqueue from "../queue/producer.js"
 import Ledger from "../models/Ledger.js"
 import mongoose from "mongoose"
+import { sendEmail } from "../emailcontroller.js"
 
 dotenv.config();
 
 // user login
 export const userlogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, pin } = req.body;
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -23,6 +24,15 @@ export const userlogin = async (req, res) => {
     if (!ispasswordmatch) {
       return res.status(401).json({ message: "Invalid password" });
     }
+
+    // Validate PIN if provided or required
+    if (pin) {
+      const ispinmatch = await bcrypt.compare(String(pin), user.pin);
+      if (!ispinmatch) {
+        return res.status(401).json({ message: "Invalid PIN" });
+      }
+    }
+
     const token = jwt.sign({
       email,
       id: user._id,
@@ -37,8 +47,9 @@ export const userlogin = async (req, res) => {
 // user register and signup
 export const useregister = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, pin } = req.body;
     const hashpassword = await bcrypt.hash(password, 10);
+    const hashedpin = await bcrypt.hash(String(pin), 10);
     const isuser = await User.findOne({ email });
     if (isuser) {
       return res.status(400).json({ message: "User already exists" });
@@ -49,8 +60,9 @@ export const useregister = async (req, res) => {
       name,
       email,
       password: hashpassword,
+      pin: hashedpin
     });
-
+    sendEmail(email); 
     res.status(200).json({ message: "User registered successfully", user });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -61,14 +73,22 @@ export const useregister = async (req, res) => {
 export const transact = async (req, res) => {
   try {
     const senderemail = req.user.email;
-    const { receiveremail, transactamount } = req.body;
+    const { receiveremail, transactamount, pin } = req.body;
 
     const sender = await User.findOne({ email: senderemail });
-
     const receiver = await User.findOne({ email: receiveremail });
 
     if (!sender || !receiver) {
       return res.status(404).json({ message: "Sender or receiver not found" });
+    }
+
+    // Validate PIN
+    if (!pin) {
+      return res.status(400).json({ message: "PIN is required" });
+    }
+    const ispinmatch = await bcrypt.compare(String(pin), sender.pin);
+    if (!ispinmatch) {
+      return res.status(401).json({ message: "Invalid PIN" });
     }
 
     if (sender.email === receiver.email) {
@@ -111,7 +131,7 @@ export const transact = async (req, res) => {
     // queueing the transactions 
     await transactionqueue(payment._id);
     return res.status(202).json({ message: "Transaction is being processed", transferId: payment._id });
-    // return res.status(202).json({message: `Transactions queued with ids: ${sendertransaction._id}, ${receivertransaction._id} and statuses: ${sendertransaction.status}, ${receivertransaction.status}`})
+   
 
 
 
@@ -214,7 +234,3 @@ export const transfers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
-
-
-
-
