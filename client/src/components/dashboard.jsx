@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, startTransition } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
 
   // fetching all users
   const API = import.meta.env.VITE_BACKEND_URL;
@@ -63,6 +65,12 @@ export const Dashboard = () => {
   useEffect(() => {
     fetchtransactions();
   }, []);
+
+  // sign out handler
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    navigate("/signin");
+  };
 
   // handling the click on pay button
 
@@ -164,9 +172,52 @@ export const Dashboard = () => {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Manage your transactions and balance</p>
+        {/* Top Header Bar */}
+        <div className="mb-8 flex items-center justify-between bg-white rounded-2xl px-6 py-4 shadow-lg border border-gray-100">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">Dashboard</h1>
+            <p className="text-gray-500 text-sm">
+              {profile.name ? `Welcome back, ${profile.name}` : "Manage your transactions and balance"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* User Info Pill */}
+            {profile.name && (
+              <div className="hidden sm:flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2">
+                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                  {profile.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-800 leading-tight">{profile.name}</p>
+                  <p className="text-xs text-gray-500 leading-tight">{profile.email}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Sign Out Button */}
+            <button
+              id="signout-button"
+              onClick={handleSignOut}
+              className="group flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-xl font-medium text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+            >
+              <svg
+                className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              Sign Out
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-12 gap-6">

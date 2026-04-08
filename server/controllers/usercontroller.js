@@ -62,7 +62,7 @@ export const useregister = async (req, res) => {
       password: hashpassword,
       pin: hashedpin
     });
-    sendEmail(email); 
+    sendEmail(email, name); 
     res.status(200).json({ message: "User registered successfully", user });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 
 export const Signin = () => {
-    const API = import.meta.env.VITE_BACKEND_URL ;
+    const API = import.meta.env.VITE_BACKEND_URL;
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [pin, setPin] = useState(""); // PIN state
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -20,9 +21,10 @@ export const Signin = () => {
         try {
             const response = await axios.post(`${API}/api/users/login`, {
                 email,
-                password
+                password,
+                pin // Send PIN
             });
-            
+
             if (response.status === 200) {
                 console.log("Login successful!");
                 // Store token in localStorage
@@ -39,7 +41,7 @@ export const Signin = () => {
     };
 
     return (
-       <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+        <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
 
 
 
@@ -95,6 +97,27 @@ export const Signin = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 placeholder-gray-400 text-gray-900"
                             />
                         </div>
+
+                        {/* PIN Input */}
+                        <div>
+                            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-1">
+                                Security PIN
+                            </label>
+                            <input
+                                id="pin"
+                                type="password"
+                                maxLength="4"
+                                value={pin}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (/^\d{0,4}$/.test(val)) setPin(val);
+                                }}
+                                placeholder="0000"
+                                required
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition duration-200 placeholder-gray-400 text-gray-900 tracking-widest"
+                            />
+                        </div>
+
                     </div>
 
                     {/* Remember Me & Forgot Password */}

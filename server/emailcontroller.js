@@ -22,10 +22,7 @@ const transporter = nodemailer.createTransport({
     to: `${receivermail}`,
     subject: "Greetings! ",
     text: ``, 
-    html: ```<b>Welcome to UPay ${name}
-        We are happy to onboard you with our platfrom. 
-        
-        Make safe and secure payments where UPay!</b>```,
+    html: `<b>Welcome to UPay, ${name}!</b><br><br>We are happy to onboard you with our platform.<br><br>Make safe and secure payments with UPay!`,
      
   });
 
